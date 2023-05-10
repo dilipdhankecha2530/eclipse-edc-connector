@@ -16,7 +16,7 @@ package org.eclipse.edc.iam.did.spi.document;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonDeserialize(as = EllipticCurvePublicKey.class)
+@JsonDeserialize(as = RSAPublicKey.class)
 public interface JwkPublicKey {
     String getKty();
 }

@@ -17,7 +17,9 @@ package org.eclipse.edc.iam.did;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.RSAKey;
 import org.eclipse.edc.iam.did.crypto.key.EcPrivateKeyWrapper;
+import org.eclipse.edc.iam.did.crypto.key.RsaPrivateKeyWrapper;
 import org.eclipse.edc.iam.did.resolution.DidPublicKeyResolverImpl;
 import org.eclipse.edc.iam.did.resolution.DidResolverRegistryImpl;
 import org.eclipse.edc.iam.did.spi.key.PrivateKeyWrapper;
@@ -30,6 +32,8 @@ import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.security.PrivateKeyResolver;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
+
+import java.security.interfaces.RSAPrivateKey;
 
 
 @Provides({ DidResolverRegistry.class, DidPublicKeyResolver.class })
@@ -68,8 +72,8 @@ public class IdentityDidCoreExtension implements ServiceExtension {
         });
         resolver.addParser(PrivateKeyWrapper.class, encoded -> {
             try {
-                var ecKey = (ECKey) JWK.parseFromPEMEncodedObjects(encoded);
-                return new EcPrivateKeyWrapper(ecKey);
+                var rsaKey = (RSAKey) JWK.parseFromPEMEncodedObjects(encoded);
+                return new RsaPrivateKeyWrapper(rsaKey.toRSAPrivateKey());
             } catch (JOSEException e) {
                 throw new EdcException(e);
             }

@@ -14,10 +14,7 @@
 
 package org.eclipse.edc.iam.did.spi.key;
 
-import com.nimbusds.jose.EncryptionMethod;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWEEncrypter;
-import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.*;
 
 /**
  * Abstraction for handling JWE operations on different public key types such as elliptic curve and RSA keys.
@@ -27,12 +24,12 @@ public interface PublicKeyWrapper {
     /**
      * Returns the JWE encrypter for the wrapped key.
      */
-    JWEEncrypter encrypter();
+    JWEEncrypter encrypter() throws JOSEException;
 
     /**
      * Returns the JWE verifier for the wrapped key.
      */
-    JWSVerifier verifier();
+    JWSVerifier verifier() throws JOSEException;
 
     /**
      * Returns the wrapped key algorithm.
