@@ -6,5 +6,13 @@ RUN gradle clean sample:consumer:build --no-daemon -i -x test -x javadoc -x chec
 FROM eclipse-temurin:11-jre-alpine
 COPY --from=build /home/app/sample/consumer/build/libs/consumer.jar /edc/consumer.jar
 WORKDIR /edc
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","consumer.jar"]
+CMD ["java", \
+     "-javaagent:/app/opentelemetry-javaagent.jar", \
+     "-Dedc.fs.config=/app/configuration.properties", \
+     "-Djava.util.logging.config.file=/app/logging.properties", \
+     "-Dotel.javaagent.configuration-file=/app/opentelemetry.properties", \
+     "-Dotel.metrics.exporter=prometheus", \
+     "-Dotel.exporter.prometheus.port=9090", \
+     "-Djava.security.egd=file:/dev/urandom", \
+     "-jar", \
+     "consumer.jar"]
