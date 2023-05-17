@@ -18,7 +18,9 @@ import okhttp3.Headers;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.http.EdcHttpClient;
+import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.result.Result;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +50,9 @@ public class HashicorpVaultClient {
     @NotNull
     private final TypeManager typeManager;
 
+    @Inject
+    private Monitor monitor;
+
     HashicorpVaultClient(@NotNull HashicorpVaultConfig hashicorpVaultConfig, @NotNull EdcHttpClient httpClient,
                          @NotNull TypeManager typeManager) {
         this.hashicorpVaultConfig = hashicorpVaultConfig;
@@ -60,21 +65,26 @@ public class HashicorpVaultClient {
         var headers = getHeaders();
         var request = new Request.Builder().url(requestUri).headers(headers).get().build();
 
+        monitor.info("requestUri ::"+requestUri);
         try (var response = httpClient.execute(request)) {
 
             if (response.isSuccessful()) {
+                monitor.info("SUCCESS::");
                 if (response.code() == HTTP_CODE_404) {
                     return Result.failure(
                             String.format(CALL_UNSUCCESSFUL_ERROR_TEMPLATE, "Secret not found"));
                 }
 
                 var responseBody = response.body();
+                monitor.info("responseBody::"+responseBody);
                 if (responseBody == null) {
                     return Result.failure(String.format(CALL_UNSUCCESSFUL_ERROR_TEMPLATE, "Response body empty"));
                 }
                 var payload = typeManager.readValue(responseBody.string(), GetEntryResponsePayload.class);
+                monitor.info("responseBody::"+payload.getData());
+                monitor.info("responseBody1::"+payload.getData().getData()+" VAULT_DATA_ENTRY_NAME"+VAULT_DATA_ENTRY_NAME);
                 var value = payload.getData().getData().get(VAULT_DATA_ENTRY_NAME);
-
+                monitor.info("value::"+value);
                 return Result.success(value);
             } else {
                 return Result.failure(String.format(CALL_UNSUCCESSFUL_ERROR_TEMPLATE, response.code()));
