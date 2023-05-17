@@ -39,6 +39,7 @@ public class HashicorpVaultClient {
     private static final MediaType MEDIA_TYPE_APPLICATION_JSON = MediaType.get("application/json");
     private static final String VAULT_API_VERSION = "v1";
     private static final String VAULT_SECRET_PATH = "secret";
+    private static final String VAULT_EDC_PATH = "edc";
     private static final String VAULT_SECRET_DATA_PATH = "data";
     private static final String VAULT_SECRET_METADATA_PATH = "metadata";
     private static final String CALL_UNSUCCESSFUL_ERROR_TEMPLATE = "[Hashicorp Vault] Call unsuccessful: %s";
@@ -49,9 +50,6 @@ public class HashicorpVaultClient {
     private final EdcHttpClient httpClient;
     @NotNull
     private final TypeManager typeManager;
-
-    @Inject
-    private Monitor monitor;
 
     HashicorpVaultClient(@NotNull HashicorpVaultConfig hashicorpVaultConfig, @NotNull EdcHttpClient httpClient,
                          @NotNull TypeManager typeManager) {
@@ -65,26 +63,24 @@ public class HashicorpVaultClient {
         var headers = getHeaders();
         var request = new Request.Builder().url(requestUri).headers(headers).get().build();
 
-        monitor.info("requestUri ::"+requestUri);
+
         try (var response = httpClient.execute(request)) {
 
             if (response.isSuccessful()) {
-                monitor.info("SUCCESS::");
+
                 if (response.code() == HTTP_CODE_404) {
                     return Result.failure(
                             String.format(CALL_UNSUCCESSFUL_ERROR_TEMPLATE, "Secret not found"));
                 }
 
                 var responseBody = response.body();
-                monitor.info("responseBody::"+responseBody);
+
                 if (responseBody == null) {
                     return Result.failure(String.format(CALL_UNSUCCESSFUL_ERROR_TEMPLATE, "Response body empty"));
                 }
                 var payload = typeManager.readValue(responseBody.string(), GetEntryResponsePayload.class);
-                monitor.info("responseBody::"+payload.getData());
-                monitor.info("responseBody1::"+payload.getData().getData()+" VAULT_DATA_ENTRY_NAME"+VAULT_DATA_ENTRY_NAME);
+
                 var value = payload.getData().getData().get(VAULT_DATA_ENTRY_NAME);
-                monitor.info("value::"+value);
                 return Result.success(value);
             } else {
                 return Result.failure(String.format(CALL_UNSUCCESSFUL_ERROR_TEMPLATE, response.code()));
@@ -163,7 +159,7 @@ public class HashicorpVaultClient {
         return URI.create(
                         String.format(
                                 "%s/%s/%s/%s/%s",
-                                getBaseUrl(), VAULT_API_VERSION, VAULT_SECRET_PATH, entryType, encodedKey))
+                                getBaseUrl(), VAULT_API_VERSION, VAULT_EDC_PATH, entryType, encodedKey))
                 .toString();
     }
 
